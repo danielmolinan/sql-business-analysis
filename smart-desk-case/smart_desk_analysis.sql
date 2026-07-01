@@ -1,0 +1,200 @@
+-- Selección de contexto
+
+USE ROLE TRAINING_ROLE;
+USE WAREHOUSE GOPHER_WH;
+USE DATABASE UCM;
+USE SCHEMA SMART_DESK;
+
+
+-- 1. Análisis de Ventas y Beneficio por Categoría de Producto
+
+SELECT CATEGORY AS "Categoría", TO_VARCHAR(MAINTENANCE,('$999,999,999.00')) AS "Mantenimiento", TO_VARCHAR(PRODUCT,('$999,999,999.00')) AS "Producto", TO_VARCHAR(PARTS,('$999,999,999.00')) AS "Partes", TO_VARCHAR(SUPPORT,('$999,999,999.00')) AS "Soporte", TO_VARCHAR(TOTAL,('$999,999,999.00')) AS "Total Ventas", UNITS_SOLD AS "Unidades Vendidas", TO_VARCHAR(PROFIT,('$999,999,999.00')) AS "Beneficio Total"
+FROM SALES
+WHERE ACCOUNT = 'Adabs Entertainment' AND YEAR = 2020;
+
+
+-- 2. Comparación de Rendimiento por País en Regiones APAC y EMEA
+
+SELECT REGION AS "Región", COUNTRY AS "País", TO_VARCHAR(AVG(TOTAL),('$999,999,999.00')) AS "Ingreso Promedio", ROUND(AVG(UNITS_SOLD)) AS "Unidades Vendidas Promedio", TO_VARCHAR(AVG(PROFIT),('$999,999,999.00')) AS "Beneficio Promedio"
+FROM SALES
+INNER JOIN ACCOUNTS
+ON SALES.ACCOUNT = ACCOUNTS.ACCOUNT
+WHERE REGION IN ('APAC', 'EMEA')
+GROUP BY COUNTRY, REGION
+ORDER BY REGION ASC, AVG(TOTAL) DESC;
+
+-- 2.1 Complemento al punto 2: Comparación rendimiento promedio por región APAC y EMEA
+SElECT A.REGION AS "Región", ROUND(AVG(UNITS_SOLD)) AS "Unidades Vendidas Promedio", TO_VARCHAR(AVG(TOTAL),('$999,999,999.00')) AS "Ingreso Promedio", TO_VARCHAR(AVG(PROFIT),('$999,999,999.00')) AS "Beneficio Promedio"
+FROM SALES S
+JOIN ACCOUNTS A ON S.ACCOUNT = A.ACCOUNT
+WHERE A.REGION IN ('APAC', 'EMEA')
+GROUP BY A.REGION
+ORDER BY AVG(TOTAL)DESC;
+
+
+-- 3. Análisis del Beneficio Total por Industria: Estudio de Clientes en Etapa de Compromiso
+SELECT INDUSTRY AS "Industria", TO_VARCHAR(SUM(PROFIT),('$999,999,999.00')) AS "Beneficio Total",
+CASE
+    WHEN SUM(PROFIT)>1000000 THEN 'Alto'
+    WHEN SUM(PROFIT)<1000001 THEN 'Normal'
+END AS "Categoría según beneficio"
+FROM ACCOUNTS
+INNER JOIN SALES ON ACCOUNTS.ACCOUNT = SALES.ACCOUNT
+INNER JOIN FORECASTS ON ACCOUNTS.ACCOUNT = FORECASTS.ACCOUNT
+WHERE FORECASTS.ACCOUNT IN (SELECT DISTINCT ACCOUNT
+                            FROM FORECASTS
+                            WHERE PREDICTION_CATEGORY = 'Commit' AND FORECAST > 500000)
+GROUP BY INDUSTRY
+ORDER BY "Beneficio Total" DESC;
+
+
+-- 4. Evolución del Pronóstico y Beneficio Real: Análisis de la Trayectoria por Categoría
+SELECT  COALESCE(S.CATEGORY, F.CATEGORY) AS CATEGORIA, TO_VARCHAR(SUM(S.PROFIT),('$999,999,999.00')) AS BENEFICIO,TO_VARCHAR(SUM(F.FORECAST),('$999,999,999.00')) AS PREVISION_BENEFICIO,MIN(F.OPPORTUNITY_AGE) AS OPORTUNIDAD_MAS_RECIENTE,MAX(F.OPPORTUNITY_AGE) AS OPORTUNIDAD_MAS_ANTIGUA
+FROM (SELECT CATEGORY, PROFIT, YEAR
+    FROM SALES
+    WHERE YEAR = 2021
+) S
+FULL OUTER JOIN (SELECT CATEGORY, FORECAST, OPPORTUNITY_AGE, YEAR
+    FROM FORECASTS
+    WHERE YEAR = 2022
+) F
+ON S.CATEGORY = F.CATEGORY AND S.YEAR = F.YEAR
+GROUP BY CATEGORIA;
+
+
+-- CASO PRÁCTICO: ANÁLISIS LIBRE
+
+-- Análisis Exploratorio (SQL):
+
+-- Primero, exploramos las tablas:
+SHOW TABLES;
+
+-- Identificamos los tipos de datos de cada columna en cada tabla
+SELECT
+    COLUMN_NAME AS "Nombre de Columna",
+    DATA_TYPE AS "Tipo de Datos",
+    IS_NULLABLE AS "Permite datos faltantes",
+    TABLE_NAME AS "Nombre de Tabla"
+FROM
+    UCM.INFORMATION_SCHEMA.COLUMNS
+WHERE
+    TABLE_NAME IN ('SALES', 'ACCOUNTS', 'FORECASTS')
+ORDER BY TABLE_NAME, DATA_TYPE;
+
+-- Exploramos el contenido de cada tabla
+SELECT *
+FROM SALES;
+
+SELECT *
+FROM ACCOUNTS;
+
+SELECT *
+FROM FORECASTS;
+
+-- Exploramos la tendencia de la evolución de las ventas por año y por región
+SELECT CASE
+    WHEN REGION = 'NAM' THEN 'Norte América'
+    WHEN REGION = 'EMEA' THEN 'Europa, Oriente Medio y África'
+    WHEN REGION = 'APAC' THEN 'Asia-Pacífico'
+    WHEN REGION = 'LATAM' THEN 'Latinoamérica'
+    ELSE 'Otra'
+END AS "Región",
+S.YEAR AS "Año", TO_VARCHAR(SUM(S.TOTAL),'$999,999,999.00') AS "Total ventas",
+FROM SALES S
+INNER JOIN ACCOUNTS A ON S.ACCOUNT = A.ACCOUNT
+GROUP BY S.YEAR, A.REGION
+ORDER BY REGION ASC, YEAR ASC;
+
+
+-- Exploramos la distribución de países por región
+SELECT
+CASE
+    WHEN REGION = 'NAM' THEN 'Norte América'
+    WHEN REGION = 'EMEA' THEN 'Europa, Oriente Medio y África'
+    WHEN REGION = 'APAC' THEN 'Asia-Pacífico'
+    WHEN REGION = 'LATAM' THEN 'Latinoamérica'
+    ELSE 'Otra'
+END AS "Región",
+COUNT (DISTINCT A.ACCOUNT) AS "Número de cuentas por región", YEAR
+FROM ACCOUNTS A
+JOIN SALES S ON A.ACCOUNT = S.ACCOUNT
+GROUP BY REGION, YEAR
+ORDER BY REGION ASC, YEAR ASC;
+
+
+-- Identificar el comportamiento de las ventas en la región APAC y NAM entre 2019 y 2021 junto a la cantidad de cuentas a las que se vendió:
+SELECT A.REGION AS "Región", COUNT(DISTINCT A.ACCOUNT) AS "Número de cuentas", S.YEAR AS "Año", TO_VARCHAR(SUM(S.TOTAL),'FM$999,999,999.00') AS "Total ventas"
+FROM SALES S
+JOIN ACCOUNTS A ON S.ACCOUNT = A.ACCOUNT
+WHERE REGION IN ('APAC', 'NAM')
+GROUP BY A.REGION, S.YEAR
+ORDER BY A.REGION ASC, S.YEAR ASC;
+
+-- Identificar el comportamiento de las ventas en la región LATAM y EMEA entre 2019 y 2021 junto a la cantidad de cuentas a las que se vendió:
+SELECT A.REGION AS "Región", COUNT(DISTINCT A.ACCOUNT) AS "Número de cuentas", S.YEAR AS "Año", TO_VARCHAR(SUM(S.TOTAL),'FM$999,999,999.00') AS "Total ventas"
+FROM SALES S
+JOIN ACCOUNTS A ON S.ACCOUNT = A.ACCOUNT
+WHERE REGION IN ('EMEA', 'LATAM')
+GROUP BY A.REGION, S.YEAR
+ORDER BY A.REGION ASC, S.YEAR ASC;
+
+-- Cálculos de ventas, unidades vendidas y beneficios APAC y NAM
+SELECT A.REGION AS "Región", SUM(S.UNITS_SOLD) AS "Total Unidades vendidas", TO_VARCHAR(SUM(S.PROFIT),'$999,999,999.00') AS "Beneficio Total", TO_VARCHAR(SUM(S.TOTAL),'$999,999,999.00') AS "Total Ventas", YEAR AS "Año"
+FROM SALES S
+JOIN ACCOUNTS A ON S.ACCOUNT = A.ACCOUNT
+WHERE REGION IN ('APAC','NAM')
+GROUP BY A.REGION, S.YEAR
+ORDER BY A.REGION ASC, S.YEAR ASC;
+
+-- Cálculos de ventas, unidades vendidas y beneficios LATAM y EMEA
+SELECT A.REGION AS "Región", SUM(S.UNITS_SOLD) AS "Total Unidades vendidas", TO_VARCHAR(SUM(S.PROFIT),'$999,999,999.00') AS "Beneficio Total", TO_VARCHAR(SUM(S.TOTAL),'$999,999,999.00') AS "Total Ventas", YEAR AS "Año"
+FROM SALES S
+JOIN ACCOUNTS A ON S.ACCOUNT = A.ACCOUNT
+WHERE REGION IN ('LATAM','EMEA')
+GROUP BY A.REGION, S.YEAR
+ORDER BY A.REGION ASC, S.YEAR ASC;
+
+-- Países por rendimiento en ventas APAC
+SELECT A.REGION AS "Región", A.COUNTRY, S.YEAR AS "Año", TO_VARCHAR(SUM(S.TOTAL),'$999,999,999.00') AS "Total ventas"
+FROM SALES S
+JOIN ACCOUNTS A ON S.ACCOUNT = A.ACCOUNT
+WHERE A.REGION = 'APAC'
+GROUP BY A.COUNTRY, S.YEAR, A.REGION
+ORDER BY COUNTRY ASC, YEAR ASC, A.REGION, SUM(S.TOTAL) DESC;
+
+-- Países por rendimiento en ventas EMEA
+SELECT A.REGION AS "Región", A.COUNTRY, S.YEAR AS "Año", TO_VARCHAR(SUM(S.TOTAL),'$999,999,999.00') AS "Total ventas"
+FROM SALES S
+JOIN ACCOUNTS A ON S.ACCOUNT = A.ACCOUNT
+WHERE A.REGION = 'EMEA'
+GROUP BY A.COUNTRY, S.YEAR, A.REGION
+ORDER BY COUNTRY ASC, YEAR ASC, A.REGION, SUM(S.TOTAL) DESC;
+
+-- Países por rendimiento en ventas NAM
+SELECT A.REGION AS "Región", A.COUNTRY, S.YEAR AS "Año", TO_VARCHAR(SUM(S.TOTAL),'$999,999,999.00') AS "Total ventas"
+FROM SALES S
+JOIN ACCOUNTS A ON S.ACCOUNT = A.ACCOUNT
+WHERE A.REGION = 'NAM'
+GROUP BY A.COUNTRY, S.YEAR, A.REGION
+ORDER BY COUNTRY ASC, YEAR ASC, A.REGION, SUM(S.TOTAL) DESC;
+
+-- Países por rendimiento en ventas LATAM
+SELECT A.REGION AS "Región", A.COUNTRY, S.YEAR AS "Año", TO_VARCHAR(SUM(S.TOTAL),'$999,999,999.00') AS "Total ventas"
+FROM SALES S
+JOIN ACCOUNTS A ON S.ACCOUNT = A.ACCOUNT
+WHERE A.REGION = 'LATAM'
+GROUP BY A.COUNTRY, S.YEAR, A.REGION
+ORDER BY COUNTRY ASC, YEAR ASC, A.REGION, SUM(S.TOTAL) DESC;
+
+-- Comparativo del histórico en unidades vendidas, beneficio total y total de ingresos entre todas las regiones
+SELECT A.REGION,ROUND(SUM(S.UNITS_SOLD))AS "Unidades vendidas",TO_VARCHAR(SUM(S.PROFIT),'$999,999,999.00')AS"Beneficio total",TO_VARCHAR(SUM(S.TOTAL),'$999,999,999.00')AS"Total ventas"
+FROM SALES S
+JOIN ACCOUNTS A ON S.ACCOUNT = A.ACCOUNT
+GROUP BY REGION
+ORDER BY SUM(S.TOTAL)DESC;
+
+--Consolidado del total de ingresos, beneficios y unidades vendidas por año en el mundo
+SELECT YEAR, SUM(UNITS_SOLD) AS "Unidades totales vendidas", TO_VARCHAR(SUM(TOTAL),'$999,999,999.00') AS "Ingreso histórico total", TO_VARCHAR(SUM(PROFIT),'999,999,999.00') AS "Beneficio histórico total"
+FROM SALES 
+GROUP BY YEAR
+ORDER BY YEAR;
