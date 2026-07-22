@@ -1,74 +1,70 @@
 # SQL Business Analysis
-
-Repositorio de análisis de negocio realizados con SQL, combinando consultas técnicas con interpretación orientada a la toma de decisiones. Los casos están basados en datasets reales utilizados durante el **Máster en Data Science, Big Data & Business Analytics** en la Universidad Complutense de Madrid. Los datos pueden ser descargados desde el siguiente enlace:
+Repository of business analyses carried out with SQL, combining technical queries with decision-oriented interpretation. The cases are based on real datasets used during the **Master's in Data Science, Big Data & Business Analytics** at Universidad Complutense de Madrid. The data can be downloaded from the following link:
 
 [💾Datasets](https://drive.google.com/drive/folders/16X_SxwOKAlhnYZBA5g1B-MgfmGd2zSeE?usp=sharing)
 
 ---
 
-##  Casos de análisis
+## Analysis cases
 
-### [Smart Desk — Análisis de Ventas Globales (2019–2021)](./smart-desk-case/)
+### [Smart Desk — Global Sales Analysis (2019–2021)](./smart-desk-case/)
 
-**Contexto:** Smart Desk es una empresa con presencia en cuatro regiones globales (NAM, EMEA, APAC y LATAM). El análisis abarca el período 2019–2021, coincidiendo con el impacto del COVID-19 en la economía mundial, y busca responder una pregunta de negocio concreta:
+**Context:** Smart Desk is a company with a presence across four global regions (NAM, EMEA, APAC, and LATAM). The analysis covers the 2019–2021 period, coinciding with the impact of COVID-19 on the global economy, and seeks to answer a specific business question:
 
-> *¿Qué región tuvo el mejor y peor desempeño en ventas y beneficios entre 2019 y 2021, y qué factores lo explican?*
+> *Which region had the best and worst performance in sales and profit between 2019 and 2021, and what factors explain it?*
 
-**Base de datos:** Snowflake · Schema `SMART_DESK` · Tablas: `SALES`, `ACCOUNTS`, `FORECASTS`
+**Database:** Snowflake · Schema `SMART_DESK` · Tables: `SALES`, `ACCOUNTS`, `FORECASTS`
 
-**Análisis realizados:**
+**Analyses performed:**
 
-| # | Análisis | Técnicas SQL utilizadas |
+| # | Analysis | SQL techniques used |
 |---|----------|------------------------|
-| 1 | Ventas y beneficio por categoría de producto (cuenta Adabs Entertainment, 2020) | `WHERE`, `TO_VARCHAR`, formateo numérico |
-| 2 | Comparación de rendimiento por país en regiones APAC y EMEA | `INNER JOIN`, `GROUP BY`, `AVG`, `ORDER BY` |
-| 3 | Beneficio por industria en clientes en etapa de compromiso | `INNER JOIN` múltiple, subconsulta con `IN`, `CASE WHEN`, `SUM` |
-| 4 | Evolución del pronóstico vs. beneficio real por categoría | `FULL OUTER JOIN`, `COALESCE`, `MIN`/`MAX` |
-| 5 | Análisis exploratorio libre: desempeño regional durante el COVID-19 | `INFORMATION_SCHEMA`, `CASE WHEN`, `COUNT DISTINCT`, análisis multidimensional |
+| 1 | Sales and profit by product category (Adabs Entertainment account, 2020) | `WHERE`, `TO_VARCHAR`, numeric formatting |
+| 2 | Performance comparison by country in the APAC and EMEA regions | `INNER JOIN`, `GROUP BY`, `AVG`, `ORDER BY` |
+| 3 | Profit by industry among clients in the engagement stage | multiple `INNER JOIN`, subquery with `IN`, `CASE WHEN`, `SUM` |
+| 4 | Forecast vs. actual profit evolution by category | `FULL OUTER JOIN`, `COALESCE`, `MIN`/`MAX` |
+| 5 | Open-ended exploratory analysis: regional performance during COVID-19 | `INFORMATION_SCHEMA`, `CASE WHEN`, `COUNT DISTINCT`, multidimensional analysis |
 
-**Principales hallazgos:**
-- NAM (Estados Unidos) lideró las ventas históricas con ~$98M, seguida de cerca por EMEA con ~$97M, mientras que LATAM quedó muy rezagada con ~$7M.
-- A pesar del COVID-19, las ventas globales de Smart Desk crecieron año a año: +28% entre 2019 y 2020, y +31% entre 2020 y 2021.
-- APAC mostró un comportamiento anómalo: triplicó sus ventas entre 2019 y 2020, pero las redujo un 36% en 2021 — el único caso de retroceso en ese año.
-- NAM redujo sus ventas en 2020 (el único año afectado por la pandemia) pero las duplicó en 2021, alcanzando ~$44M.
-- Singapur generó más ingresos promedio que Alemania a pesar de tener una población 13 veces menor.
+**Key findings:**
+- NAM (United States) led historical sales with ~$98M, closely followed by EMEA with ~$97M, while LATAM lagged far behind with ~$7M.
+- Despite COVID-19, Smart Desk's global sales grew year over year: +28% between 2019 and 2020, and +31% between 2020 and 2021.
+- APAC showed anomalous behavior: it tripled its sales between 2019 and 2020, but dropped 36% in 2021 — the only case of decline that year.
+- NAM's sales fell in 2020 (the only year affected by the pandemic) but doubled in 2021, reaching ~$44M.
+- Singapore generated higher average revenue than Germany despite having a population 13 times smaller.
 
-**Recomendaciones derivadas del análisis:**
-- Diversificar mercados en LATAM (Brasil, Colombia, Chile) para reducir la dependencia de Argentina y México.
-- Investigar el retroceso de APAC en 2021, especialmente la ausencia de Singapur tras su excepcional rendimiento en 2020.
-- Evaluar la incorporación de Canadá a la región NAM para reducir la dependencia de un único mercado.
-- Estudiar los factores que permitieron a Francia, España, Australia y Singapur crecer en 2020 para replicarlos en mercados más débiles.
+**Recommendations derived from the analysis:**
+- Diversify markets in LATAM (Brazil, Colombia, Chile) to reduce dependence on Argentina and Mexico.
+- Investigate APAC's 2021 decline, especially the absence of Singapore following its exceptional 2020 performance.
+- Evaluate adding Canada to the NAM region to reduce dependence on a single market.
+- Study the factors that allowed France, Spain, Australia, and Singapore to grow in 2020, in order to replicate them in weaker markets.
 
 ---
 
-## Técnicas SQL demostradas
-
+## SQL techniques demonstrated
 - Joins: `INNER JOIN`, `FULL OUTER JOIN`
-- Agregaciones: `SUM`, `AVG`, `COUNT DISTINCT`, `MIN`, `MAX`, `ROUND`
-- Lógica condicional: `CASE WHEN`, `COALESCE`
-- Subconsultas correlacionadas con `IN`
-- Exploración de schema con `INFORMATION_SCHEMA.COLUMNS`
-- Formateo de salida con `TO_VARCHAR` y máscaras numéricas
-- Ordenación y filtrado multidimensional
+- Aggregations: `SUM`, `AVG`, `COUNT DISTINCT`, `MIN`, `MAX`, `ROUND`
+- Conditional logic: `CASE WHEN`, `COALESCE`
+- Correlated subqueries with `IN`
+- Schema exploration with `INFORMATION_SCHEMA.COLUMNS`
+- Output formatting with `TO_VARCHAR` and numeric masks
+- Multidimensional sorting and filtering
 
-**Plataforma:** Snowflake (compatible con SQL estándar)
+**Platform:** Snowflake (standard SQL compatible)
 
 ---
 
-## Estructura del repositorio
-
+## Repository structure
 ```
 sql-business-analysis/
 │
 └── smart-desk-case/
-    ├── smart_desk_analysis.sql   # Consultas completas con comentarios
-    └── smart_desk_report.pdf     # Análisis e interpretación de resultados
+    ├── smart_desk_analysis.sql   # Full queries with comments
+    └── smart_desk_report.pdf     # Analysis and interpretation of results
 ```
 
 ---
 
-## Autor
-
-**Daniel Molina Novoa** · Data Analyst  
+## Author
+**Daniel Molina Novoa** · Data Analyst
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/daniel-molina-novoa/)
 [![GitHub](https://img.shields.io/badge/GitHub-danielmolinan-181717?style=flat&logo=github&logoColor=white)](https://github.com/danielmolinan)
